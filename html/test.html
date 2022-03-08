@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My experiment</title>
+        <script src = "jspsych/dist/jspsych.js"></script>
+        <script src = "jspsych/dist/plugin-fullscreen.js"></script>
+        <script src = "jspsych/dist/plugin-survey-text.js"></script>
+        <script src = "jspsych/dist/plugin-html-keyboard-response.js"></script>
+        <script src = "jspsych/dist/plugin-preload.js"></script>
+        <link rel="stylesheet" href="./jspsych/dist/jspsych.css" type="text/css">
+    </head>
+    <body></body>
+    <script>
+        /* initialize jsPsych */
+      var jsPsych = initJsPsych({
+        show_progress_bar: false,
+        on_finish: function() {
+          // jsPsych.data.displayData();
+        }
+      });
+
+    /* create timeline */
+    var timeline = [];
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: true
+    });
+
+    var survey_trial = {
+      type: jsPsychSurveyText,
+      questions: [
+        {prompt: "Name: ", name: 'name'},
+      ],
+      // on_finish: function(data){
+      //     var temp = JSON.parse(data.responses);
+      //     data.subname = temp.name;
+      // }
+    };
+    
+
+    /* define welcome message trial */
+    var welcome = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: "Welcome to the experiment. Press any key to begin."
+    };
+
+    /* define instructions trial */
+    var instructions = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `
+        <p>In this experiment, a picture will appear in the center
+        of the screen.</p><p>If the picture shows <strong>threat</strong> context (e.g. social isolation),
+        press the letter F on the keyboard as fast as you can.</p>
+        <p>If the picture shows <strong>safe</strong> context, press the letter J
+        as fast as you can.</p>
+        <div style='width: 700px;'>
+        <div style='float: left;'><img src='code/stimuli/rcic_base_1_00001_inv.png'></img>
+        <p class='small'><strong>Press the F key</strong></p></div>
+        <div style='float: right;'><img src='code/stimuli/rcic_base_1_00001_ori.png'></img>
+        <p class='small'><strong>Press the J key</strong></p></div>
+        </div>
+        <p>Press any key to begin.</p>
+      `,
+      post_trial_gap: 0
+    };
+    var instructions2 = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `
+        <p>This is just a demo. There will be a total of 10 trials. </p>
+        <p>To repeat, press F if there is threat, press J if not</p>
+        <p>Press any key to begin.</p>
+      `,
+      post_trial_gap: 0
+    };
+    
+    var images = [
+    'code/stimuli/rcic_base_1_00001_inv.png',
+    'code/stimuli/rcic_base_1_00001_ori.png'
+    ]
+    /* preload images */
+      var preload = {
+      type: jsPsychPreload,
+      images: images,
+    }
+    
+    
+    /* test trials */
+    var trial = {
+	  type: 'html-keyboard-response',
+  	stimulus: images[0]+ images[1],
+    choice: ['f','m']
+    
+    // '<img src = "./code/stimuli/rcic_base_1_00001_ori.png"/><img src= "./code/stimuli/rcic_base_1_00001_inv.png">/',
+    }
+
+    /*timeline.push*/
+    timeline.push(survey_trial);
+    timeline.push(welcome);
+    timeline.push(instructions);
+    timeline.push(instructions2);
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: false
+    });
+    timeline.push(trial);
+    timeline.push(preload)
+
+    
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+    </script>
+</html>

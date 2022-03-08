@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Yi's Experiment</title>
+    <script src = "jspsych/dist/jspsych.js"></script>
+    <script src = "jspsych/dist/plugin-html-button-response.js"></script>
+    <script src = "jspsych/dist/plugin-preload.js"></script>
+    <script src = "jp/jspsych-psychophysics.js"></script>
+    <script src = "yw.php"></script>
+
+    <link rel="stylesheet" href="./jspsych/dist/jspsych.css"></link>
+</head>
+<body></body>
+<script>
+    // This file demonstrates how to present two images with 500-ms SOA
+    function saveData(data){
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'yw.php'); // 'write_data.php' is the path to the php file described above.
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({filedata: data}));
+        }
+    const jsPsych = initJsPsych({
+        on_finish: function() {
+            saveData(jsPsych.data.get().csv());
+            jsPsych.data.displayData();
+        }
+    })
+
+
+    console.log(`jsPsych Version ${jsPsych.version()}`)
+
+    const instruction = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: 'Click on the Start button.',
+        choices: ['Start'],
+        prompt: "This is a sample program for the jspsych-psychophysics plugin.",
+    }
+
+    const images = [ // All the images used in this demo
+        'code/stimuli/rcic_base_1_00001_inv.png',
+        'code/stimuli/rcic_base_1_00001_ori.png',
+        'code/stimuli/rcic_base_1_00002_inv.png',
+        'code/stimuli/rcic_base_1_00002_ori.png',
+        'code/stimuli/rcic_base_1_00003_inv.png',
+        'code/stimuli/rcic_base_1_00003_ori.png',
+        'code/stimuli/rcic_base_1_00004_inv.png',
+        'code/stimuli/rcic_base_1_00004_ori.png',
+        'code/stimuli/rcic_base_1_00005_inv.png',
+        'code/stimuli/rcic_base_1_00005_ori.png'
+
+    ];
+
+    // Preloading files are needed to present the stimuli accurately.
+    const preload = {
+        type: jsPsychPreload,
+        images: images,
+    }
+
+    const trial = {
+        timeline: [
+            {
+                type: jsPsychPsychophysics,
+                stimuli: [
+                    {
+                        obj_type: 'image',
+                        file: jsPsych.timelineVariable('firstImage'),
+                        show_start_time: 500, // ms after the start of the trial
+                        startX: 300,
+                    },
+                    {
+                        obj_type: 'image',
+                        file: jsPsych.timelineVariable('secondImage'),
+                        show_start_time: 500, // ms after the start of the trial
+                        startX: 1000
+                    }
+                ],
+                choices: ['f','j'],
+                canvas_height: 500,
+                prompt: 'Press F to choice left image, press J to choice right image',
+                data: {'firstImage': jsPsych.timelineVariable('firstImage'),
+                'secondImage': jsPsych.timelineVariable('secondImage')} // for identification
+            }
+        ],
+        timeline_variables: [
+            {firstImage: images[0], secondImage: images[1]},
+            {firstImage: images[2], secondImage: images[3]},
+            {firstImage: images[4], secondImage: images[5]},
+            {firstImage: images[6], secondImage: images[7]},
+            {firstImage: images[8], secondImage: images[9]}
+        ],
+        randomize_order: true
+    }
+
+    var data = jsPsych.data.get().filter({trial_type: 'jsPsychPsychophysics'});
+
+    jsPsych.run([preload, instruction, trial])
+
+
+
+
+
+</script>
+
+</html>
