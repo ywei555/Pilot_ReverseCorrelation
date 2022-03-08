@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Zeyi's experiment</title>
+    <script src="jspsych.js"></script>
+    <script src="zeyianimation.js"></script>
+    <script src="zeyirdk.js"></script>
+    <script src="jspsych-6/plugins/jspsych-survey-text.js"></script>
+    <script src="jspsych-6/plugins/jspsych-fullscreen.js"></script>
+    <script src="jspsych-6/plugins/jspsych-animation.js"></script>
+    <script src="jspsych-6/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych-6/plugins/jspsych-image-keyboard-response.js"></script>
+    <link href="zeyi.css" rel="stylesheet" type="text/css"></link>
+  </head>
+  <body>
+  </body>
+  <script>
+    var aw = 0.8;
+    var ah = 0.6;
+    var subname = 'joe';
+
+    /* create timeline */
+    var timeline = [];
+    timeline.push({
+      type: 'fullscreen',
+      fullscreen_mode: true
+    });
+    var survey_trial = {
+      type: 'survey-text',
+      questions: [
+        {prompt: "Name: ", name: 'name'},
+      ],
+      on_finish: function(data){
+          var temp = JSON.parse(data.responses);
+          data.subname = temp.name;
+      }
+    };
+    timeline.push(survey_trial)
+
+    var subject_id = jsPsych.randomization.randomID(10);
+    var currentDate = new Date();
+
+    var date = currentDate.getDate();
+    var month = currentDate.getMonth(); //Be careful! January is 0 not 1
+    var year = currentDate.getFullYear();
+    function pad(n) {
+        return n<10 ? '0'+n : n;
+    }
+
+    var dateString = pad(year) + pad(month + 1) +pad(date);
+    var timestamp = currentDate.toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    })
+
+    var mdate = dateString+ "T" + timestamp[0] + timestamp[1] +  timestamp[3] + timestamp[4] +  timestamp[6] + timestamp[7]+  timestamp[9] + timestamp[10];
+    var dotduration = 500;
+    jsPsych.data.addProperties({
+      subject: subject_id,
+      date: mdate
+    });
+
+
+
+    /* define welcome message trial */
+    var welcome = {
+      type: "html-keyboard-response",
+      stimulus: "Welcome to the experiment. Press any key to begin."
+    };
+    timeline.push(welcome);
+
+    var page1 = {
+      type: "html-keyboard-response",
+      prompt: "Press any key to continue",
+      stimulus: "<p>In this experiment, you will judge whether most dots are moving </p><p> to the right side or the left side. </p> "
+    };
+    timeline.push(page1);
+
+    var test_stimuli = [
+      { stimulus: "img/blue.png", data: { test_part: 'test'} },
+      // { stimulus: "img/orange.png", data: { test_part: 'test', correct_response: 'j' } }
+    ];
+
+    var page2 = {
+      type: "html-keyboard-response",
+      prompt: "Press any key to continue",
+      stimulus: "<p>Dot motion will be presented for 1 second. After that, the dots will disappear and you will make your decision. </p><p>Which direction are most dots moving in? </p>"
+    };
+    timeline.push(page2);
+    var dotmotion1 = {
+      type: "zeyirdk",
+      choices: jsPsych.NO_KEYS,
+      post_trial_gap: 0, //The Inter Trial Interval. You can either have no ITI, or have an ITI but change the display element to be the same color as the stimuli background to prevent flashing between trials
+      number_of_dots: 100, //Total number of dots in each aperture
+      RDK_type: 3, //The type of RDK used
+      trial_duration: dotduration, //Duration of each trial in ms
+      timeline: RDK_trials, //The timeline of all the trials
+      aperture_width: aw,
+      aperture_height: ah,
+      background_color: "white",
+      dot_color: "black",
+      coherence: 0.7,
+    }
+    var page3a = {
+      timeline: [dotmotion1],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+      randomize_order: true
+    }
+    timeline.push(page3a);
+
+    var page3 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>To make your decision, press Q to choose left, press P to choose right. </p> <p>Remember, your job is to decide which direction most dots are moving in. </p>"
+    };
+    timeline.push(page3);
+
+    var test1 = {
+      type: 'zeyi',
+      choices: ['Q', 'p'],
+      initialkey:  0,
+      speed:  0.002,
+      boundaryL: 0.1,
+      boundaryR: 0.9,
+      words: "For example, if you'd like to go left, please press Q now.\nThe dot will move to the LEFT. After the dot reaches the bar, you made your decision to choose left.\nPRESS Q again to confirm your choice and move on to the next trial. ",
+      // data: jsPsych.timelineVariable('data'),
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+    var page4a = {
+      timeline: [test1],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+    }
+    timeline.push(page4a);
+
+
+    var test1a = {
+      type: 'zeyi',
+      choices: ['q', 'P'],
+      initialspeed:  0,
+      speed:  0.002,
+      initialkey: 0,
+      boundaryL: 0.1,
+      boundaryR: 0.9,
+      // data: jsPsych.timelineVariable('data'),
+      words: "If you'd like to go right, please press P now.\nThe dot will move to the RIGHT.\n After the dot reaches the bar, you made your decision to choose right. \nPRESS P again to confirm your choice and move on to the next trial. ",
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+    var page4B = {
+      timeline: [test1a],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+    }
+    timeline.push(page4B);
+
+    // var page4 = {
+    //   type: "html-keyboard-response",
+    //   stimulus: "<p>Is the dot moving too slow? You can press the same key (Q or P) again to speed up.</p><p>The more times you press it, the faster the speed will be. </p>"
+    // };
+    // timeline.push(page4);
+    //
+    // var test2 = {
+    //   type: 'zeyi',
+    //   dot: 'img/orange.png',
+    //   choices: ['Q', 'p'],
+    //   initialspeed:  0,
+    //   speed: 0.0005,
+    //   boundaryL: 0.1,
+    //   boundaryR: 0.9,
+    //   words: "Try pressing Q, see how fast the dot moves, press Q again to speed it up. \nYou can see that the dot is moving faster and faster as you press Q again and again.\n Once the dot reaches the bar, PRESS Q again to continue.",
+    //   data: jsPsych.timelineVariable('data'),
+    //   on_finish: function(data){
+    //     // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+    //   },
+    // }
+    //
+    //
+    // var page5a = {
+    //   timeline: [test2],
+    //   timeline_variables: test_stimuli,
+    //   repetitions: 1,
+    // }
+    // timeline.push(page5a);
+
+    var test4 = {
+      type: 'zeyi',
+      choices: ['Q','p'],
+      initialspeed: -0.002,
+      speed: 0.002,
+      initialkey: -1,
+      boundaryL: 0.1,
+      boundaryR: 0.9,
+      words: "The dot is not always staying still at the beginning, it can move to either direction randomly by itself. \nOnce it reaches the left bar, the dot will make the left decision for you. Press Q to continue.",
+      // data: jsPsych.timelineVariable('data'),
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+
+    var page5b = {
+      timeline: [test4],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+    }
+    timeline.push(page5b);
+
+    var page5 = {
+          type: "html-keyboard-response",
+          stimulus: "<p>The dot is moving towards the left, however, if you want to choose right instead, </p><p>you need to press the P key to reverse the moving direction of the dot.</p> "
+    };
+    timeline.push(page5);
+
+
+    var test3 = {
+      type: 'zeyi',
+      dot: 'img/orange.png',
+      choices: ['Q', 'P'],
+      initialkey: -1,
+      speed: 0.001,
+      initialspeed: -0.005,
+      boundaryL: 0.1,
+      boundaryR: 0.9,
+      words: "Now the dot wants to choose left for you, but if you want to choose right instead, PRESS P now.\nOnce the right bar is reached, PRESS P to continue.",
+      // data: jsPsych.timelineVariable('data'),
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+
+    var page5a = {
+      timeline: [test3],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+    }
+    timeline.push(page5a);
+
+    var test11 = {
+      type: 'zeyi',
+      choices: ['Q', 'P'],
+      initialkey:  1,
+      speed:  0.003,
+      boundaryL: 0.45,
+      boundaryR: 0.95,
+      words: "Both the left bar and right bar will be at a different location each trial. \n The speed of the dot will also vary from trial to trial.",
+      // data: jsPsych.timelineVariable('data'),
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+    var page14a = {
+      timeline: [test11],
+      timeline_variables: test_stimuli,
+      repetitions: 1,
+    }
+    timeline.push(page14a);
+
+    var fixation = {
+      type: 'html-keyboard-response',
+      stimulus: '<div style="font-size:60px;">+</div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 200,
+      data: {test_part: 'fixation'}
+    }
+
+    var test = {
+      type: 'zeyi',
+      choices: ['Q', 'P'],
+      initialkey:  function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0, -1, 1], 1, [2,3,3])[0];
+      },
+      speed:  function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0.001, 0.002, 0.003], 1)[0];
+      },
+      boundaryL: function(){
+        return Math.random() * 0.35 + 0.1;
+      },
+      boundaryR: function(){
+        return Math.random() * 0.35 + 0.55;
+      },
+
+      data: jsPsych.timelineVariable('data'),
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+
+    var RDK_trials = [
+			{//Condition 1
+				    coherent_direction: 0
+			},
+		];
+
+		//The test block where all the trials are nested. The properties here will trickle down to all trials in the timeline unless they have their own properties defined
+		var dotmotion = {
+			type: "zeyirdk",
+      choices: jsPsych.NO_KEYS,
+			post_trial_gap: 0, //The Inter Trial Interval. You can either have no ITI, or have an ITI but change the display element to be the same color as the stimuli background to prevent flashing between trials
+			number_of_dots: 100, //Total number of dots in each aperture
+			RDK_type: 3, //The type of RDK used
+			trial_duration: dotduration, //Duration of each trial in ms
+			timeline: RDK_trials, //The timeline of all the trials
+      aperture_width: aw,
+      aperture_height: ah,
+			background_color: "white",
+			dot_color: "black",
+      coherence: function(){
+        return Math.random() * 0.6 + 0.2;
+      },
+		}
+
+
+    var page6 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>To repeat, your goal is to decide which direction most dots are moving in.</p><p> To make sure everything makes sense, let''s do some practice trials first.</p>"
+    };
+    timeline.push(page6);
+
+
+    var practicetest = {
+      type: 'zeyi',
+      dot: 'img/orange.png',
+      choices: ['Q', 'P'],
+      initialkey:  function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0, -1,1], 1)[0];
+      },
+      speed:  function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0.001,0.002,0.003], 1)[0];
+      },
+
+      boundaryL: function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0.45,0.2,0.3,0.4], 1)[0];
+      },
+      boundaryR: function(){
+        return jsPsych.randomization.sampleWithoutReplacement([0.6,0.7,0.8,0.55], 1)[0];
+      },
+
+      data: jsPsych.timelineVariable('data'),
+      words: "PRESS Q to go left, PRESS P to go right.\nYou can change direction at any point.\nOnce the dot reaches the bar, press the same key again to confirm and move on.",
+      on_finish: function(data){
+        // data.correct = data.key_press == jsPsych.pluginAPI.convertKeyCharacterToKeyCode(data.correct_response);
+      },
+    }
+
+
+    var practice = {
+      timeline: [fixation, dotmotion, practicetest],
+      timeline_variables: test_stimuli,
+      repetitions: 5,
+      randomize_order: true
+    }
+    timeline.push(practice);
+
+
+        var page7 = {
+          type: "html-keyboard-response",
+          stimulus: "<p>Now you know the rule. We want to know how well a human can do in motion detection.</p><p> Please try your best to make the correct judgement!</p>"
+        };
+        timeline.push(page7);
+
+        var page8 = {
+          type: "html-keyboard-response",
+          stimulus: "<p>When you are ready, press any key to start the experiment. It will take about 5 minutes.</p>"
+        };
+        timeline.push(page8);
+    var test_procedure = {
+      timeline: [fixation, dotmotion, test],
+      timeline_variables: test_stimuli,
+      repetitions: 100,
+      randomize_order: true
+    }
+    timeline.push(test_procedure);
+
+    var debrief_block = {
+      type: "html-keyboard-response",
+      stimulus: function() {
+        //
+        // var trials = jsPsych.data.get().filter({test_part: 'test'});
+        // var correct_trials = trials.filter({correct: true});
+        // var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+        // var rt = Math.round(correct_trials.select('rt').mean());
+        //
+        // return "<p>You responded correctly on "+accuracy+"% of the trials.</p>"+
+        // "<p>Your average response time was "+rt+"ms.</p>"+
+        // "<p>Press any key to complete the experiment. Thank you!</p>";
+          return "<p>Thanks for participating! There is one more IMPORTANT thing to do:</p>" +
+              "<p>Your answers will be recorded in the next page. Please copy all the contents and email it to</p> <p>zeyichen@email.arizona.edu</p>"
+      }
+    };
+
+    timeline.push(debrief_block);
+    timeline.push({
+      type: 'fullscreen',
+      fullscreen_mode: false
+    });
+
+        function saveData(name, data){
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'write_data.php'); // 'write_data.php' is the path to the php file described above.
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({filename: name, filedata: data}));
+        }
+
+        jsPsych.init({
+          timeline: timeline,
+          on_trial_finish: function() {
+              if (jsPsych.data.get().count() % 10 == 0){
+                  var tsubname =JSON.parse(JSON.stringify(jsPsych.data.get().first(2).values()));
+                  subname = tsubname[1].subname;
+                  var filename = "CONSP_"+ subname + "_" + subject_id.toString() + "_" + mdate.toString();
+
+                  saveData(filename, jsPsych.data.get().csv());
+              }
+
+          },
+          on_finish: function() {
+              var tsubname =JSON.parse(JSON.stringify(jsPsych.data.get().first(2).values()));
+              subname = tsubname[1].subname;
+              var filename = "FCONSP_"+ subname + "_" + subject_id.toString() + "_" + mdate.toString();
+
+              saveData(filename, jsPsych.data.get().csv());
+              jsPsych.data.displayData();
+
+          }
+      });
+
+  </script>
+</html>
