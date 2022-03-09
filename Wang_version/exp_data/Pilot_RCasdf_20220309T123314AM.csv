@@ -1,0 +1,8 @@
+"success","trial_type","trial_index","time_elapsed","internal_node_id","rt","response","subname","question_order","gender","varimages","stimulus","response_type","key_press","avg_frame_time","center_x","center_y"
+"true","fullscreen","0","1755","0.0-0.0","","","","","","","","","","","",""
+"","survey-text","1","2921","0.0-1.0","1145","{""name"":""asdf""}","asdf","","","","","","","","",""
+"","survey-multi-choice","2","4291","0.0-2.0","1370","{""gender"":""Female""}","","[0]","Female","[{""firstImage"":""code/alter/rcic_base_1_00001_inv.png"",""secondImage"":""code/alter/rcic_base_1_00001_ori.png""},{""firstImage"":""code/alter/rcic_base_1_00002_inv.png"",""secondImage"":""code/alter/rcic_base_1_00002_ori.png""},{""firstImage"":""code/alter/rcic_base_1_00003_inv.png"",""secondImage"":""code/alter/rcic_base_1_00003_ori.png""}]","","","","","",""
+"","html-button-response","3","4971","0.0-3.0","664","0","","","","","Click on the Start button.","","","","",""
+"","psychophysics","4","5866","0.0-4.0-0.0","886","f","","","","","","key","f","16.673076923076923","512","250"
+"","psychophysics","5","6938","0.0-4.0-0.1","1065","j","","","","","","key","j","16.59375","512","250"
+"","psychophysics","6","7771","0.0-4.0-0.2","827","f","","","","","","key","f","16.6734693877551","512","250"

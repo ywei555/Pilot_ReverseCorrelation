@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Yi's Experiment</title>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+    <script src="./jspsych/dist/jspsych.js"></script>
+    <script src="./jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="./jspsych/dist/plugin-fullscreen.js"></script>
+    <script src="./jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="./jspsych/dist/plugin-survey-text.js"></script>
+    <script src="./jspsych/dist/plugin-preload.js"></script>
+    <script src="./jp/jspsych-psychophysics.js"></script>
+
+    <link rel="stylesheet" href="./jspsych/dist/jspsych.css"></link>
+</head>
+<body></body>
+<script>
+      var task_name = "Pilot_RC";
+      // var subject_id = jsPsych.randomization.randomID(10);
+       var currentDate = new Date();
+
+       var date = currentDate.getDate();
+       var month = currentDate.getMonth(); //Be careful! January is 0 not 1
+       var year = currentDate.getFullYear();
+       function pad(n) {
+           return n<10 ? '0'+n : n;
+       }
+
+       var dateString = pad(year) + pad(month + 1) +pad(date);
+       var timestamp = currentDate.toLocaleTimeString(undefined, {
+           hour: '2-digit',
+           minute: '2-digit',
+           second: '2-digit'
+       })
+
+       var mdate = dateString+ "T" + timestamp[0] + timestamp[1] +  timestamp[3] + timestamp[4] +  timestamp[6] + timestamp[7]+  timestamp[9] + timestamp[10];
+       // jsPsych.data.addProperties({
+       //   task_name: task_name,
+       //   subject: subject_id,
+       //   date: mdate
+       // });
+
+
+      // you must put your save_data php url here.
+      var save_url = "save_data.php";
+      var data_dir = "exp_data";
+
+      // my preference is to include the task and sbj_id in the file name
+      function save_data_csv(file_name) {
+          console.log('savedata')
+          jQuery.ajax({
+              type: 'post',
+              cache: false,
+              url: save_url,
+              data: {
+                  data_dir: data_dir,
+                  file_name: file_name + '.csv', // the file type should be added
+                  exp_data: jsPsych.data.get().csv()
+              }
+          });
+      }
+
+
+
+
+    var varimages = []
+    // This file demonstrates how to present two images with 500-ms SOA
+
+    var jsPsych = initJsPsych({
+        on_finish: function() {
+            var tsubname =JSON.parse(JSON.stringify(jsPsych.data.get().first(2).values()));
+            var subname = tsubname[1].subname;
+            var filename = task_name+ subname + "_" + mdate.toString();
+            console.log(filename)
+            save_data_csv(filename);
+            jsPsych.data.displayData('csv');
+        }
+    })
+
+    var timeline = [];
+    timeline.push({
+      type: jsPsychFullscreen,
+      fullscreen_mode: true
+    });
+    var name_trial = {
+      type: jsPsychSurveyText,
+      questions: [
+        {prompt: "Name: ", name: 'name'},
+      ],
+      on_finish: function(data){
+          // console.log()
+          // var temp = JSON.parse(data.response.name);
+          data.subname = data.response.name;
+      }
+    };
+    timeline.push(name_trial)
+
+    console.log(`jsPsych Version ${jsPsych.version()}`)
+
+    var getgender = {
+      type: jsPsychSurveyMultiChoice,
+      questions: [
+        {
+          prompt: "What is your gender?",
+          name: 'gender',
+          options: ['Male', 'Female'],
+          required: true,
+          horizontal: true
+        },
+      ],
+      on_finish: function(data){
+          data.gender = data.response.gender;
+          var dir = []
+          if (data.gender == "Male"){
+            console.log('m')
+            dir = "code/stimuli/";
+          } else{
+            console.log('f')
+            dir = "code/alter/";
+          }
+          var wimages = []
+          function add_image(x){
+              wimages.push(x);
+          }
+          $.ajax({
+              url: dir,
+              success: function (data) {
+                $(data).find("a").attr("href", function (i, val) {
+                    if( val.match(/\.(jpe?g|png|gif)$/) ) {
+                        add_image(dir + val)
+                        // $("body").append( "<img src='"+ dir + val +"'>" );
+                    }
+                });
+              },
+              async: false
+          });
+          console.log(wimages)
+          var varimages = [];
+          for (let i = 0; i < 3; i++){
+              varimages.push({firstImage: wimages[i*2], secondImage: wimages[i*2+1]})
+          }
+          console.log(varimages)
+          data.varimages = varimages
+      }
+    };
+    timeline.push(getgender)
+
+    // // Preloading files are needed to present the stimuli accurately.
+    // var preload = {
+    //     type: jsPsychPreload,
+    //     images: wimages,
+    // };
+    // timeline.push(preload);
+
+
+    var instruction = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: 'Click on the Start button.',
+        choices: ['Start'],
+        prompt: "This is a sample program to choose most female like images",
+        on_finish: function(data){
+            console.log(jsPsych.data.get().trials)
+            var varimages = jsPsych.data.get().trials[2].varimages
+            // data.loopindex = 0
+            console.log(varimages)
+        }
+    };
+    timeline.push(instruction);
+
+    var trial = {
+        type: jsPsychPsychophysics,
+        stimuli: [
+            {
+                obj_type: 'image',
+                file: function(){
+                  console.log('f1')
+                  return 'code/alter/rcic_base_1_00001_ori.png'//jsPsych.timelineVariable('firstImage')
+                },
+                show_start_time: 500, // ms after the start of the trial
+                startX: 300,
+            },
+            {
+                obj_type: 'image',
+                file: function(){
+                  console.log('f2')
+                  return 'code/stimuli/rcic_base_1_00001_ori.png'//jsPsych.timelineVariable('secondImage')
+                },
+                show_start_time: 500, // ms after the start of the trial
+                startX: 1000
+            }
+        ],
+        choices: ['f','j'],
+        canvas_height: 500,
+        prompt: 'Press F to choice left image, press J to choice right image',
+        on_start: function(trial){
+            console.log('starttrial')
+            var varimages = jsPsych.data.get().trials[2].varimages
+            console.log(varimages)
+            var iii = jsPsych.data.get().last(1).values()[0].trial_index
+            console.log(iii)
+            console.log(varimages[iii-3].firstImage)
+            trial.stimuli[0].file = varimages[iii-3].firstImage
+            trial.stimuli[1].file = varimages[iii-3].secondImage
+        }
+        // data: function(){
+        //     console.log('data')
+        //     console.log(jsPsych.timelineVariable())
+        //     out = {'firstImage': jsPsych.timelineVariable('firstImage'),
+        //     'secondImage': jsPsych.timelineVariable('secondImage')} // for identification
+        //     return out
+        //   },
+    };
+    var tasks = {
+       timeline: [trial],
+       // loop_function: function(tasks){
+          // console.log('loop')
+          // console.log(data.values())
+          // return(true)
+       // }
+       timeline_variables: varimages,//function(){
+       //     console.log('time vars')
+       //     var varimages = jsPsych.data.get().trials[0].varimages
+       //     console.log(varimages)
+       //     return varimages
+       // },
+       repetitions: 3,
+       // randomize_order: true
+    }
+    timeline.push(tasks)
+
+    jsPsych.run(timeline)
+
+</script>
+
+</html>

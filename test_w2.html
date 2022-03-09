@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Yi's Experiment</title>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+    <script src="./jspsych/dist/jspsych.js"></script>
+    <script src="./jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="./jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="./jspsych/dist/plugin-preload.js"></script>
+    <script src="./jp/jspsych-psychophysics.js"></script>
+
+    <link rel="stylesheet" href="./jspsych/dist/jspsych.css"></link>
+</head>
+<body></body>
+<script>
+    var varimages = []
+    // This file demonstrates how to present two images with 500-ms SOA
+    var timeline = [];
+    var jsPsych = initJsPsych({
+        on_finish: function() {
+            jsPsych.data.displayData('csv');
+        }
+    })
+    console.log(`jsPsych Version ${jsPsych.version()}`)
+
+    var getgender = {
+      type: jsPsychSurveyMultiChoice,
+      questions: [
+        {
+          prompt: "What is your gender?",
+          name: 'gender',
+          options: ['Male', 'Female'],
+          required: true,
+          horizontal: true
+        },
+      ],
+      on_finish: function(data){
+          data.gender = data.response.gender;
+          var dir = []
+          if (data.gender == "Male"){
+            console.log('m')
+            dir = "code/stimuli/";
+          } else{
+            console.log('f')
+            dir = "code/alter/";
+          }
+          var wimages = []
+          function add_image(x){
+              wimages.push(x);
+          }
+          $.ajax({
+              url: dir,
+              success: function (data) {
+                $(data).find("a").attr("href", function (i, val) {
+                    if( val.match(/\.(jpe?g|png|gif)$/) ) {
+                        add_image(dir + val)
+                        // $("body").append( "<img src='"+ dir + val +"'>" );
+                    }
+                });
+              },
+              async: false
+          });
+          console.log(wimages)
+          var varimages = [];
+          for (let i = 0; i < 3; i++){
+              varimages.push({firstImage: wimages[i*2], secondImage: wimages[i*2+1]})
+          }
+          console.log(varimages)
+          data.varimages = varimages
+      }
+    };
+    timeline.push(getgender)
+
+    // // Preloading files are needed to present the stimuli accurately.
+    // var preload = {
+    //     type: jsPsychPreload,
+    //     images: wimages,
+    // };
+    // timeline.push(preload);
+
+
+    var instruction = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: 'Click on the Start button.',
+        choices: ['Start'],
+        prompt: "This is a sample program to choose most female like images",
+        on_finish: function(){
+            var varimages = jsPsych.data.get().trials[0].varimages
+            console.log(varimages('firstImage'))
+
+        }
+    };
+    timeline.push(instruction);
+
+    var trial = {
+        type: jsPsychPsychophysics,
+        stimuli: [
+            {
+                obj_type: 'image',
+                file: jsPsych.timelineVariable('firstImage'),
+                show_start_time: 500, // ms after the start of the trial
+                startX: 300,
+            },
+            {
+                obj_type: 'image',
+                file: jsPsych.timelineVariable('secondImage'),
+                show_start_time: 500, // ms after the start of the trial
+                startX: 1000
+            }
+        ],
+        choices: ['f','j'],
+        canvas_height: 500,
+        prompt: 'Press F to choice left image, press J to choice right image',
+        data: {'firstImage': jsPsych.timelineVariable('firstImage'),
+            'secondImage': jsPsych.timelineVariable('secondImage')} // for identification
+    };
+    var tasks = {
+       timeline: [trial],
+       timeline_variables: function(){
+           var varimages = jsPsych.data.get().trials[0].varimages
+           console.log(varimages)
+           return varimages
+       },
+       repetitions: 1,
+       randomize_order: true
+    }
+    timeline.push(tasks)
+
+    jsPsych.run(timeline)
+
+</script>
+
+</html>
