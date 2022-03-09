@@ -15,7 +15,8 @@
 </head>
 <body></body>
 <script>
-      var task_name = "Pilot_RC";
+       var nTrial = 10
+       var task_name = "Pilot_RC";
       // var subject_id = jsPsych.randomization.randomID(10);
        var currentDate = new Date();
 
@@ -70,7 +71,7 @@
         on_finish: function() {
             var tsubname =JSON.parse(JSON.stringify(jsPsych.data.get().first(2).values()));
             var subname = tsubname[1].subname;
-            var filename = task_name+ subname + "_" + mdate.toString();
+            var filename = task_name+ "_" + subname + "_" + mdate.toString();
             console.log(filename)
             save_data_csv(filename);
             jsPsych.data.displayData('csv');
@@ -111,13 +112,8 @@
       on_finish: function(data){
           data.gender = data.response.gender;
           var dir = []
-          if (data.gender == "Male"){
-            console.log('m')
-            dir = "code/stimuli/";
-          } else{
-            console.log('f')
-            dir = "code/alter/";
-          }
+          dir = "stimuli/" + data.gender + "/"
+          console.log(dir)
           var wimages = []
           function add_image(x){
               wimages.push(x);
@@ -136,7 +132,7 @@
           });
           console.log(wimages)
           var varimages = [];
-          for (let i = 0; i < 3; i++){
+          for (let i = 0; i < nTrial; i++){
               varimages.push({firstImage: wimages[i*2], secondImage: wimages[i*2+1]})
           }
           console.log(varimages)
@@ -159,10 +155,10 @@
         choices: ['Start'],
         prompt: "This is a sample program to choose most female like images",
         on_finish: function(data){
-            console.log(jsPsych.data.get().trials)
-            var varimages = jsPsych.data.get().trials[2].varimages
-            // data.loopindex = 0
-            console.log(varimages)
+            // console.log(jsPsych.data.get().trials)
+            // var varimages = jsPsych.data.get().trials[2].varimages
+            // // data.loopindex = 0
+            // console.log(varimages)
         }
     };
     timeline.push(instruction);
@@ -174,7 +170,7 @@
                 obj_type: 'image',
                 file: function(){
                   console.log('f1')
-                  return 'code/alter/rcic_base_1_00001_ori.png'//jsPsych.timelineVariable('firstImage')
+                  return 'stimuli/spacefiller1.png'//jsPsych.timelineVariable('firstImage')
                 },
                 show_start_time: 500, // ms after the start of the trial
                 startX: 300,
@@ -183,7 +179,7 @@
                 obj_type: 'image',
                 file: function(){
                   console.log('f2')
-                  return 'code/stimuli/rcic_base_1_00001_ori.png'//jsPsych.timelineVariable('secondImage')
+                  return 'stimuli/spacefiller2.png'//jsPsych.timelineVariable('secondImage')
                 },
                 show_start_time: 500, // ms after the start of the trial
                 startX: 1000
@@ -195,7 +191,7 @@
         on_start: function(trial){
             console.log('starttrial')
             var varimages = jsPsych.data.get().trials[2].varimages
-            console.log(varimages)
+            // console.log(varimages)
             var iii = jsPsych.data.get().last(1).values()[0].trial_index
             console.log(iii)
             console.log(varimages[iii-3].firstImage)
@@ -223,7 +219,7 @@
        //     console.log(varimages)
        //     return varimages
        // },
-       repetitions: 3,
+       repetitions: nTrial,
        // randomize_order: true
     }
     timeline.push(tasks)
