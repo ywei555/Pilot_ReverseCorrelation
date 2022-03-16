@@ -11,7 +11,7 @@ rm(list= ls())
 #load data
 
 source("Wimport.R")
-mydir = "./exp_data_0315/"
+mydir = "./exp_data_0316/"
 d = W_csv(mydir)
 
 process <- function(x){
