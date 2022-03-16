@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Yi's Experiment</title>
+    <script src="./jspsych/dist/jspsych.js"></script>
+    <script src="./jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="./jspsych/dist/plugin-preload.js"></script>
+    <script src="./jp/jspsych-psychophysics.js"></script>
+
+    <link rel="stylesheet" href="./jspsych/dist/jspsych.css"></link>
+</head>
+<body></body>
+<script>
+    // This file demonstrates how to present two images with 500-ms SOA
+    var timeline = [];
+    var jsPsych = initJsPsych({
+        on_finish: function() {
+            jsPsych.data.displayData('csv');
+        }
+    })
+    console.log(`jsPsych Version ${jsPsych.version()}`)
+    // Preloading files are needed to present the stimuli accurately.
+    var preload = {
+        type: jsPsychPreload,
+        images: images,
+    };
+    timeline.push(preload);
+    var instruction = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: 'Click on the Start button.',
+        choices: ['Start'],
+        prompt: "This is a sample program to choose most female like images",
+    };
+    timeline.push(instruction);
+
+    var images = [ // All the images used in this demo
+        'code/stimuli/rcic_base_1_00001_inv.png',
+        'code/stimuli/rcic_base_1_00001_ori.png',
+        'code/stimuli/rcic_base_1_00002_inv.png',
+        'code/stimuli/rcic_base_1_00002_ori.png',
+        'code/stimuli/rcic_base_1_00003_inv.png',
+        'code/stimuli/rcic_base_1_00003_ori.png',
+    ];
+
+    var trial = {
+        type: jsPsychPsychophysics,
+        stimuli: [
+            {
+                obj_type: 'image',
+                file: jsPsych.timelineVariable('firstImage'),
+                show_start_time: 500, // ms after the start of the trial
+                startX: 300,
+            },
+            {
+                obj_type: 'image',
+                file: jsPsych.timelineVariable('secondImage'),
+                show_start_time: 500, // ms after the start of the trial
+                startX: 1000
+            }
+        ],
+        choices: ['f','j'],
+        canvas_height: 500,
+        prompt: 'Press F to choice left image, press J to choice right image',
+        data: {'firstImage': jsPsych.timelineVariable('firstImage'),
+            'secondImage': jsPsych.timelineVariable('secondImage')} // for identification
+    };
+    var tasks = {
+       timeline: [trial],
+       timeline_variables: [
+           {firstImage: images[0], secondImage: images[1]},
+           {firstImage: images[2], secondImage: images[3]},
+           {firstImage: images[4], secondImage: images[5]},
+       ],
+       repetitions: 3,
+       randomize_order: true
+    }
+    timeline.push(tasks)
+    // var data = jsPsych.data.get().filter({trial_type: 'jsPsychPsychophysics', choices: 'f'});
+
+    jsPsych.run(timeline)
+
+</script>
+
+</html>
